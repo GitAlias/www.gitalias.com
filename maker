@@ -1,0 +1,72 @@
+#!/bin/sh
+set -euf
+
+TEMPLATE_FILE="./maker.d/pandoc/template.svelte"
+INPUT_DIR="../gitalias/doc"
+OUTPUT_DIR="./src/routes"
+
+clean() {
+    find "$OUTPUT_DIR" -type f | 
+    grep -v "/__" |
+    xargs rm
+}
+
+get_slugs() {
+    find "$INPUT_DIR" -name 'index.md' -type f | 
+    sed 's#/index.md##; s#^.*/##;'
+}
+
+get_file_title() {
+    grep -m1 '^# ' "$1" | sed 's/^# //'
+}
+
+sed_file_escape_html() {
+    gsed -i "s/{/\&lbrace;/g; s/}/\&rbrace;/g; s/\`/&grave;/g" "$1"
+}
+
+do_pandoc() {
+    template_file="$1"
+    title="$2"
+    input_file="$3"
+    output_file="$4"
+    pandoc \
+    --standalone \
+    --from=markdown \
+    --to=html \
+    --template="$template_file" \
+    --metadata title="$title" \
+    --output="$output_file" \
+    "$input_file"
+}
+
+do_slug_with_markdoc() {
+    slug="$1"
+    input_file="$INPUT_DIR/$slug/index.md"
+    output_file="$OUTPUT_DIR/$slug.markdoc"
+    cp "$input_file" "$output_file"
+    sed_file_escape_html "$output_file"
+}
+
+do_slug_with_pandoc() {
+    slug="$1"
+    input_file="$INPUT_DIR/$slug/index.md"
+    output_file="$OUTPUT_DIR/$slug.svelte"
+    title=$(get_file_title "$input_file")
+    echo "$slug"
+    do_pandoc "$TEMPLATE_FILE" "$title" "$input_file" "$output_file"
+    sed_file_escape_html "$output_file"
+}
+
+do_slug() {
+    do_slug_with_pandoc "$1"
+}
+
+build() {
+    get_slugs |
+    while read -r slug; do
+        do_slug "$slug"
+    done
+}
+
+clean
+build
