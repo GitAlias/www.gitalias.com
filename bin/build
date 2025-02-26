@@ -1,0 +1,42 @@
+#!/bin/sh
+set -euf
+
+GIT_TOP_DIR="$(git rev-parse --show-toplevel)"
+TEMPLATE_FILE="./maker.d/pandoc/template.svelte"
+INPUT_DIR="../gitalias/doc"
+OUTPUT_DIR="./src/routes"
+
+do_pandoc() {
+    template_file="$1"
+    title="$2"
+    input_file="$3"
+    output_file="$4"
+    pandoc \
+    --standalone \
+    --from=markdown \
+    --to=html \
+    --template="$template_file" \
+    --metadata title="$title" \
+    --output="$output_file" \
+    "$input_file"
+}
+
+do_slug() {
+    slug="$1"
+    input_file="$INPUT_DIR/$slug/index.md"
+    output_file="$OUTPUT_DIR/$slug.svelte"
+    title=$(markdown-reader-to-headline "$input_file")
+    echo "$slug"
+    do_pandoc "$TEMPLATE_FILE" "$title" "$input_file" "$output_file"
+    "$TOP"/bin/file-escape-html "$output_file"
+}
+
+build() {
+    "$GIT_TOP_DIR/bin/slugs" |
+    while read -r slug; do
+        do_slug "$slug"
+    done
+}
+
+build
+    

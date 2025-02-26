@@ -1,0 +1,11 @@
+#!/bin/sh
+set -euf
+
+OUTPUT_DIR="./src/routes"
+
+clean() {
+    find "$OUTPUT_DIR" -type f | 
+    grep -v "/__" |
+    grep -v "/\+" |
+    xargs rm
+}

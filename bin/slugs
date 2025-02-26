@@ -1,0 +1,6 @@
+#!/bin/sh
+set -euf
+INPUT_DIR="$HOME/git/gitalias/gitalias/doc"
+cut_input_dir=$(( ${#INPUT_DIR} + 2 ))
+find "$INPUT_DIR" -name 'index.md' -type f -exec dirname {} \; | 
+cut -c $cut_input_dir-

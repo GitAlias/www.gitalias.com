@@ -1,0 +1,1 @@
+gsed -i "s/{/\&lbrace;/g; s/}/\&rbrace;/g; s/\`/&grave;/g" "$1"
